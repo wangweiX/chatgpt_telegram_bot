@@ -194,14 +194,10 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     for answer_chunk in split_text_into_chunks(text, 4000):
         try:
             await update.message.reply_text(answer_chunk, parse_mode=ParseMode.HTML)
-
-            await message_handle(update, context, message=answer_chunk)
         except telegram.error.BadRequest:
             # answer has invalid characters, so we send it without parse_mode
             await update.message.reply_text(answer_chunk)
 
-            await message_handle(update, context, message=answer_chunk)
-    
     # calculate spent dollars
     n_spent_dollars = voice.duration * (config.whisper_price_per_1_min / 60)
 
