@@ -9,8 +9,15 @@ from pathlib import Path
 from datetime import datetime
 
 import telegram
-from telegram import Update, User, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import (
+    Update, 
+    User, 
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup, 
+    BotCommand
+)
 from telegram.ext import (
+    Application,
     ApplicationBuilder,
     CallbackContext,
     CommandHandler,
@@ -303,19 +310,30 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
     except:
         await context.bot.send_message(update.effective_chat.id, "Some error in error handler")
 
+async def post_init(application: Application):
+    await application.bot.set_my_commands([
+        BotCommand("/new", "Start new dialog"),
+        BotCommand("/mode", "Select chat mode"),
+        BotCommand("/retry", "Re-generate response for previous query"),
+        BotCommand("/balance", "Show balance"),
+        BotCommand("/help", "Show help message"),
+    ])
+
 def run_bot() -> None:
     application = (
         ApplicationBuilder()
         .token(config.telegram_token)
         .concurrent_updates(True)
+        .post_init(post_init)
         .build()
     )
 
     # add handlers
-    if len(config.allowed_telegram_usernames) == 0:
-        user_filter = filters.ALL
-    else:
-        user_filter = filters.User(username=config.allowed_telegram_usernames)
+    user_filter = filters.ALL
+    if len(config.allowed_telegram_usernames) > 0:
+        usernames = [x for x in config.allowed_telegram_usernames if isinstance(x, str)]
+        user_ids = [x for x in config.allowed_telegram_usernames if isinstance(x, int)]
+        user_filter = filters.User(username=usernames) | filters.User(user_id=user_ids)
 
     application.add_handler(CommandHandler("start", start_handle, filters=user_filter))
     application.add_handler(CommandHandler("help", help_handle, filters=user_filter))
