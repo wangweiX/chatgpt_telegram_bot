@@ -70,6 +70,7 @@ class ChatGPT:
         n_dialog_messages_before = len(dialog_messages)
         answer = None
         while answer is None:
+            
             try:
                 if self.model in {"gpt-3.5-turbo", "gpt-4"}:
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
